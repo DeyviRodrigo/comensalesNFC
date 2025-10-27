@@ -887,136 +887,140 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  _buildTextField(
-                    controller: _idPersonal,
-                    label: 'ID personal',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _tipoDocumento,
-                    label: 'Tipo de documento',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _nacionalidad,
-                    label: 'Nacionalidad',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _apellidoPaterno,
-                    label: 'Apellido paterno',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _apellidoMaterno,
-                    label: 'Apellido materno',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _nombres,
-                    label: 'Nombres',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _fkDistrito,
-                    label: 'Distrito (código)',
-                    requiredField: true,
-                    maxLength: 6,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _usuarioRegistro,
-                    label: 'Usuario de registro',
-                    requiredField: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _fkUnidadProd,
-                    label: 'Unidad productiva (opcional)',
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _fkSubArea,
-                    label: 'Subárea (opcional)',
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _fechaNacimiento,
-                    label: 'Fecha de nacimiento (YYYY-MM-DD)',
-                    readOnly: true,
-                    onTap: _pickFechaNacimiento,
-                    suffixIcon: IconButton(
-                      onPressed: _pickFechaNacimiento,
-                      icon: const Icon(Icons.date_range),
+                        _buildTextField(
+                          controller: _idPersonal,
+                          label: 'ID personal',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _tipoDocumento,
+                          label: 'Tipo de documento',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _nacionalidad,
+                          label: 'Nacionalidad',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _apellidoPaterno,
+                          label: 'Apellido paterno',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _apellidoMaterno,
+                          label: 'Apellido materno',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _nombres,
+                          label: 'Nombres',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _fkDistrito,
+                          label: 'Distrito (código)',
+                          requiredField: true,
+                          maxLength: 6,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _usuarioRegistro,
+                          label: 'Usuario de registro',
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _fkUnidadProd,
+                          label: 'Unidad productiva (opcional)',
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _fkSubArea,
+                          label: 'Subárea (opcional)',
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _fechaNacimiento,
+                          label: 'Fecha de nacimiento (YYYY-MM-DD)',
+                          readOnly: true,
+                          onTap: _pickFechaNacimiento,
+                          suffixIcon: IconButton(
+                            onPressed: _pickFechaNacimiento,
+                            icon: const Icon(Icons.date_range),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _referido,
+                          label: 'Referido (opcional)',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _observaciones,
+                          label: 'Observaciones (opcional)',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _cargo,
+                          label: 'Cargo (opcional)',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _numeroCelular,
+                          label: 'Número celular (opcional)',
+                          keyboardType: TextInputType.phone,
+                          maxLength: 15,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _correoElectronico,
+                          label: 'Correo electrónico (opcional)',
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _condicion,
+                          label: 'Condición (opcional)',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _tipoRenta,
+                          label: 'Tipo de renta (opcional)',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _empleador,
+                          label: 'Empleador (opcional)',
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: _saving ? null : _save,
+                          child: _saving
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text('Registrar personal'),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _referido,
-                    label: 'Referido (opcional)',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _observaciones,
-                    label: 'Observaciones (opcional)',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _cargo,
-                    label: 'Cargo (opcional)',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _numeroCelular,
-                    label: 'Número celular (opcional)',
-                    keyboardType: TextInputType.phone,
-                    maxLength: 15,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _correoElectronico,
-                    label: 'Correo electrónico (opcional)',
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _condicion,
-                    label: 'Condición (opcional)',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _tipoRenta,
-                    label: 'Tipo de renta (opcional)',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    controller: _empleador,
-                    label: 'Empleador (opcional)',
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child: _saving
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Registrar personal'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
