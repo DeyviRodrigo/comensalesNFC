@@ -275,31 +275,44 @@ class _ComensalesPageState extends State<ComensalesPage> {
             tooltip: 'Actualizar',
             icon: const Icon(Icons.refresh),
           ),
-          _MenuButton(current: _AppMenuOption.comensales),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-        child: Text(
-          'Error: $_error',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
-        ),
-      )
-          : Column(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _HeaderRow(),
-          const Divider(height: 1),
+          const _SideMenu(current: _AppMenuOption.comensales),
+          const VerticalDivider(width: 1),
           Expanded(
-            child: ListView.separated(
-              itemCount: _items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, i) => _ComensalRow(
-                c: _items[i],
-                onEditar: _editarComensal,
-                onEliminar: _deleteComensal,
-              ),
+            child: SafeArea(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(
+                          child: Text(
+                            'Error: $_error',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          children: [
+                            const _HeaderRow(),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: ListView.separated(
+                                itemCount: _items.length,
+                                separatorBuilder: (_, __) =>
+                                    const Divider(height: 1),
+                                itemBuilder: (context, i) => _ComensalRow(
+                                  c: _items[i],
+                                  onEditar: _editarComensal,
+                                  onEliminar: _deleteComensal,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
             ),
           ),
         ],
@@ -308,34 +321,80 @@ class _ComensalesPageState extends State<ComensalesPage> {
   }
 }
 
-class _MenuButton extends StatelessWidget {
+class _SideMenu extends StatelessWidget {
   final _AppMenuOption current;
-  const _MenuButton({required this.current});
+  const _SideMenu({required this.current});
+
+  void _handleSelect(BuildContext context, _AppMenuOption value) {
+    if (value == current) return;
+    if (value == _AppMenuOption.comensales) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PersonalFormPage()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<_AppMenuOption>(
-      tooltip: 'Menú',
-      onSelected: (value) {
-        if (value == current) return;
-        if (value == _AppMenuOption.comensales) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PersonalFormPage()),
-          );
-        }
-      },
-      itemBuilder: (context) => const [
-        PopupMenuItem(
-          value: _AppMenuOption.comensales,
-          child: Text('Registro de comensales'),
+    final colorScheme = Theme.of(context).colorScheme;
+
+    Widget destination({
+      required _AppMenuOption option,
+      required IconData icon,
+      required String label,
+    }) {
+      final selected = option == current;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: ListTile(
+          leading: Icon(icon),
+          title: Text(label),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          selected: selected,
+          selectedTileColor: colorScheme.primaryContainer,
+          selectedColor: colorScheme.onPrimaryContainer,
+          onTap: () => _handleSelect(context, option),
         ),
-        PopupMenuItem(
-          value: _AppMenuOption.personal,
-          child: Text('Registro de personal'),
+      );
+    }
+
+    return Container(
+      width: 240,
+      color: colorScheme.surfaceVariant,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 16, 12),
+              child: Text(
+                'Menú principal',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  destination(
+                    option: _AppMenuOption.comensales,
+                    icon: Icons.restaurant_menu,
+                    label: 'Registro de comensales',
+                  ),
+                  destination(
+                    option: _AppMenuOption.personal,
+                    icon: Icons.badge,
+                    label: 'Registro de personal',
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -811,20 +870,23 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Registro de personal'),
-        actions: [
-          _MenuButton(current: _AppMenuOption.personal),
-        ],
       ),
-      body: SafeArea(
-        child: AbsorbPointer(
-          absorbing: _saving,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _SideMenu(current: _AppMenuOption.personal),
+          const VerticalDivider(width: 1),
+          Expanded(
+            child: SafeArea(
+              child: AbsorbPointer(
+                absorbing: _saving,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   _buildTextField(
                     controller: _idPersonal,
                     label: 'ID personal',
