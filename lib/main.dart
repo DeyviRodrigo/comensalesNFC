@@ -277,63 +277,58 @@ class _ComensalesPageState extends State<ComensalesPage> {
           ),
         ],
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _SideMenu(current: _AppMenuOption.comensales),
-          const VerticalDivider(width: 1),
-          Expanded(
-            child: SafeArea(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(
-                          child: Text(
-                            'Error: $_error',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+      drawer: const _AppDrawer(current: _AppMenuOption.comensales),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Text(
+                      'Error: $_error',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      const _HeaderRow(),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: _items.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, i) => _ComensalRow(
+                            c: _items[i],
+                            onEditar: _editarComensal,
+                            onEliminar: _deleteComensal,
                           ),
-                        )
-                      : Column(
-                          children: [
-                            const _HeaderRow(),
-                            const Divider(height: 1),
-                            Expanded(
-                              child: ListView.separated(
-                                itemCount: _items.length,
-                                separatorBuilder: (_, __) =>
-                                    const Divider(height: 1),
-                                itemBuilder: (context, i) => _ComensalRow(
-                                  c: _items[i],
-                                  onEditar: _editarComensal,
-                                  onEliminar: _deleteComensal,
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
-            ),
-          ),
-        ],
+                      ),
+                    ],
+                  ),
       ),
     );
   }
 }
 
-class _SideMenu extends StatelessWidget {
+class _AppDrawer extends StatelessWidget {
   final _AppMenuOption current;
-  const _SideMenu({required this.current});
+  const _AppDrawer({required this.current});
 
   void _handleSelect(BuildContext context, _AppMenuOption value) {
+    final navigator = Navigator.of(context);
+    navigator.pop();
     if (value == current) return;
-    if (value == _AppMenuOption.comensales) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } else {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PersonalFormPage()),
-      );
-    }
+    Future.microtask(() {
+      if (value == _AppMenuOption.comensales) {
+        navigator.popUntil((route) => route.isFirst);
+      } else {
+        navigator.push(
+          MaterialPageRoute(builder: (_) => const PersonalFormPage()),
+        );
+      }
+    });
   }
 
   @override
@@ -360,9 +355,7 @@ class _SideMenu extends StatelessWidget {
       );
     }
 
-    return Container(
-      width: 240,
-      color: colorScheme.surfaceVariant,
+    return Drawer(
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -693,48 +686,39 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _idPersonal = TextEditingController();
-  final TextEditingController _fkUnidadProd = TextEditingController();
   final TextEditingController _tipoDocumento = TextEditingController();
   final TextEditingController _nacionalidad = TextEditingController();
   final TextEditingController _apellidoPaterno = TextEditingController();
   final TextEditingController _apellidoMaterno = TextEditingController();
   final TextEditingController _nombres = TextEditingController();
-  final TextEditingController _fechaNacimiento = TextEditingController();
   final TextEditingController _fkDistrito = TextEditingController();
-  final TextEditingController _referido = TextEditingController();
-  final TextEditingController _observaciones = TextEditingController();
-  final TextEditingController _fkSubArea = TextEditingController();
-  final TextEditingController _cargo = TextEditingController();
-  final TextEditingController _numeroCelular = TextEditingController();
-  final TextEditingController _correoElectronico = TextEditingController();
-  final TextEditingController _condicion = TextEditingController();
-  final TextEditingController _tipoRenta = TextEditingController();
-  final TextEditingController _empleador = TextEditingController();
   final TextEditingController _usuarioRegistro = TextEditingController();
 
   bool _saving = false;
 
   List<TextEditingController> get _allControllers => [
         _idPersonal,
-        _fkUnidadProd,
         _tipoDocumento,
         _nacionalidad,
         _apellidoPaterno,
         _apellidoMaterno,
         _nombres,
-        _fechaNacimiento,
         _fkDistrito,
-        _referido,
-        _observaciones,
-        _fkSubArea,
-        _cargo,
-        _numeroCelular,
-        _correoElectronico,
-        _condicion,
-        _tipoRenta,
-        _empleador,
         _usuarioRegistro,
       ];
+
+  void _applyDefaults() {
+    _tipoDocumento.text = 'DNI';
+    _nacionalidad.text = 'Peruana';
+    _fkDistrito.text = '211101';
+    _usuarioRegistro.text = 'deyvi.rodrigo@gmail.com';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _applyDefaults();
+  }
 
   @override
   void dispose() {
@@ -770,28 +754,6 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
     );
   }
 
-  Future<void> _pickFechaNacimiento() async {
-    DateTime initialDate = DateTime.now();
-    final parts = _fechaNacimiento.text.split('-');
-    if (parts.length == 3) {
-      final year = int.tryParse(parts[0]);
-      final month = int.tryParse(parts[1]);
-      final day = int.tryParse(parts[2]);
-      if (year != null && month != null && day != null) {
-        initialDate = DateTime(year, month, day);
-      }
-    }
-    final picked = await showDatePicker(
-      context: context,
-      firstDate: DateTime(1930),
-      lastDate: DateTime.now(),
-      initialDate: initialDate,
-    );
-    if (picked != null) {
-      _fechaNacimiento.text = picked.toIso8601String().substring(0, 10);
-    }
-  }
-
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -808,39 +770,6 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
         'usuario_registro': _usuarioRegistro.text.trim(),
       };
 
-      void setOptionalText(String key, TextEditingController controller) {
-        final value = controller.text.trim();
-        if (value.isNotEmpty) {
-          data[key] = value;
-        }
-      }
-
-      void setOptionalInt(String key, TextEditingController controller) {
-        final value = controller.text.trim();
-        if (value.isEmpty) return;
-        final parsed = int.tryParse(value);
-        if (parsed != null) {
-          data[key] = parsed;
-        }
-      }
-
-      setOptionalInt('fk_unid_prod', _fkUnidadProd);
-      setOptionalInt('fk_sub_area', _fkSubArea);
-
-      final fecha = _fechaNacimiento.text.trim();
-      if (fecha.isNotEmpty) {
-        data['fecha_nacimiento'] = fecha;
-      }
-
-      setOptionalText('referido', _referido);
-      setOptionalText('observaciones', _observaciones);
-      setOptionalText('cargo', _cargo);
-      setOptionalText('numero_celular', _numeroCelular);
-      setOptionalText('correo_electronico', _correoElectronico);
-      setOptionalText('condicion', _condicion);
-      setOptionalText('tipo_renta', _tipoRenta);
-      setOptionalText('empleador', _empleador);
-
       await _client.from('personal').insert(data);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -849,6 +778,7 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
         controller.clear();
       }
       _formKey.currentState!.reset();
+      _applyDefaults();
     } on PostgrestException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -871,156 +801,81 @@ class _PersonalFormPageState extends State<PersonalFormPage> {
       appBar: AppBar(
         title: const Text('Registro de personal'),
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _SideMenu(current: _AppMenuOption.personal),
-          const VerticalDivider(width: 1),
-          Expanded(
-            child: SafeArea(
-              child: AbsorbPointer(
-                absorbing: _saving,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildTextField(
-                          controller: _idPersonal,
-                          label: 'ID personal',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _tipoDocumento,
-                          label: 'Tipo de documento',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _nacionalidad,
-                          label: 'Nacionalidad',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _apellidoPaterno,
-                          label: 'Apellido paterno',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _apellidoMaterno,
-                          label: 'Apellido materno',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _nombres,
-                          label: 'Nombres',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _fkDistrito,
-                          label: 'Distrito (código)',
-                          requiredField: true,
-                          maxLength: 6,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _usuarioRegistro,
-                          label: 'Usuario de registro',
-                          requiredField: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _fkUnidadProd,
-                          label: 'Unidad productiva (opcional)',
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _fkSubArea,
-                          label: 'Subárea (opcional)',
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _fechaNacimiento,
-                          label: 'Fecha de nacimiento (YYYY-MM-DD)',
-                          readOnly: true,
-                          onTap: _pickFechaNacimiento,
-                          suffixIcon: IconButton(
-                            onPressed: _pickFechaNacimiento,
-                            icon: const Icon(Icons.date_range),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _referido,
-                          label: 'Referido (opcional)',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _observaciones,
-                          label: 'Observaciones (opcional)',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _cargo,
-                          label: 'Cargo (opcional)',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _numeroCelular,
-                          label: 'Número celular (opcional)',
-                          keyboardType: TextInputType.phone,
-                          maxLength: 15,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _correoElectronico,
-                          label: 'Correo electrónico (opcional)',
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _condicion,
-                          label: 'Condición (opcional)',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _tipoRenta,
-                          label: 'Tipo de renta (opcional)',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _empleador,
-                          label: 'Empleador (opcional)',
-                        ),
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _saving ? null : _save,
-                          child: _saving
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Registrar personal'),
-                        ),
-                      ],
-                    ),
+      drawer: const _AppDrawer(current: _AppMenuOption.personal),
+      body: SafeArea(
+        child: AbsorbPointer(
+          absorbing: _saving,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTextField(
+                    controller: _idPersonal,
+                    label: 'ID personal',
+                    requiredField: true,
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _tipoDocumento,
+                    label: 'Tipo de documento',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _nacionalidad,
+                    label: 'Nacionalidad',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _apellidoPaterno,
+                    label: 'Apellido paterno',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _apellidoMaterno,
+                    label: 'Apellido materno',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _nombres,
+                    label: 'Nombres',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _fkDistrito,
+                    label: 'Distrito (código)',
+                    requiredField: true,
+                    maxLength: 6,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _usuarioRegistro,
+                    label: 'Usuario de registro',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Registrar personal'),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
