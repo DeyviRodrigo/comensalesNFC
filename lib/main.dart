@@ -77,6 +77,8 @@ class Comensal {
   String get nombreCompleto => personal?.nombreCompleto ?? '(sin nombre)';
 }
 
+enum _AppMenuOption { comensales, personal }
+
 class ComensalesPage extends StatefulWidget {
   const ComensalesPage({super.key});
   @override
@@ -275,31 +277,116 @@ class _ComensalesPageState extends State<ComensalesPage> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-        child: Text(
-          'Error: $_error',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
+      drawer: const _AppDrawer(current: _AppMenuOption.comensales),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Text(
+                      'Error: $_error',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      const _HeaderRow(),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: _items.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, i) => _ComensalRow(
+                            c: _items[i],
+                            onEditar: _editarComensal,
+                            onEliminar: _deleteComensal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+      ),
+    );
+  }
+}
+
+class _AppDrawer extends StatelessWidget {
+  final _AppMenuOption current;
+  const _AppDrawer({required this.current});
+
+  void _handleSelect(BuildContext context, _AppMenuOption value) {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    if (value == current) return;
+    Future.microtask(() {
+      if (value == _AppMenuOption.comensales) {
+        navigator.popUntil((route) => route.isFirst);
+      } else {
+        navigator.push(
+          MaterialPageRoute(builder: (_) => const PersonalFormPage()),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    Widget destination({
+      required _AppMenuOption option,
+      required IconData icon,
+      required String label,
+    }) {
+      final selected = option == current;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: ListTile(
+          leading: Icon(icon),
+          title: Text(label),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          selected: selected,
+          selectedTileColor: colorScheme.primaryContainer,
+          selectedColor: colorScheme.onPrimaryContainer,
+          onTap: () => _handleSelect(context, option),
         ),
-      )
-          : Column(
-        children: [
-          const _HeaderRow(),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.separated(
-              itemCount: _items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, i) => _ComensalRow(
-                c: _items[i],
-                onEditar: _editarComensal,
-                onEliminar: _deleteComensal,
+      );
+    }
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 16, 12),
+              child: Text(
+                'Menú principal',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-          ),
-        ],
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  destination(
+                    option: _AppMenuOption.comensales,
+                    icon: Icons.restaurant_menu,
+                    label: 'Registro de comensales',
+                  ),
+                  destination(
+                    option: _AppMenuOption.personal,
+                    icon: Icons.badge,
+                    label: 'Registro de personal',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -578,6 +665,214 @@ class _ComensalEditPageState extends State<ComensalEditPage> {
                   style: TextStyle(fontSize: 12),
                 )
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ------------- Registro de Personal -------------
+class PersonalFormPage extends StatefulWidget {
+  const PersonalFormPage({super.key});
+
+  @override
+  State<PersonalFormPage> createState() => _PersonalFormPageState();
+}
+
+class _PersonalFormPageState extends State<PersonalFormPage> {
+  final _client = Supabase.instance.client;
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _idPersonal = TextEditingController();
+  final TextEditingController _tipoDocumento = TextEditingController();
+  final TextEditingController _nacionalidad = TextEditingController();
+  final TextEditingController _apellidoPaterno = TextEditingController();
+  final TextEditingController _apellidoMaterno = TextEditingController();
+  final TextEditingController _nombres = TextEditingController();
+  final TextEditingController _fkDistrito = TextEditingController();
+  final TextEditingController _usuarioRegistro = TextEditingController();
+
+  bool _saving = false;
+
+  List<TextEditingController> get _allControllers => [
+        _idPersonal,
+        _tipoDocumento,
+        _nacionalidad,
+        _apellidoPaterno,
+        _apellidoMaterno,
+        _nombres,
+        _fkDistrito,
+        _usuarioRegistro,
+      ];
+
+  void _applyDefaults() {
+    _tipoDocumento.text = 'DNI';
+    _nacionalidad.text = 'Peruana';
+    _fkDistrito.text = '211101';
+    _usuarioRegistro.text = 'deyvi.rodrigo@gmail.com';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _applyDefaults();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _allControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    bool requiredField = false,
+    TextInputType? keyboardType,
+    int? maxLength,
+    Widget? suffixIcon,
+    bool readOnly = false,
+    VoidCallback? onTap,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixIcon: suffixIcon,
+      ),
+      readOnly: readOnly,
+      onTap: onTap,
+      keyboardType: keyboardType,
+      maxLength: maxLength,
+      validator: requiredField
+          ? (value) => (value == null || value.trim().isEmpty) ? 'Requerido' : null
+          : null,
+    );
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _saving = true);
+
+    try {
+      final data = <String, dynamic>{
+        'id_personal': _idPersonal.text.trim(),
+        'tipo_documento': _tipoDocumento.text.trim(),
+        'nacionalidad': _nacionalidad.text.trim(),
+        'apellido_paterno': _apellidoPaterno.text.trim(),
+        'apellido_materno': _apellidoMaterno.text.trim(),
+        'nombres': _nombres.text.trim(),
+        'fk_distrito': _fkDistrito.text.trim(),
+        'usuario_registro': _usuarioRegistro.text.trim(),
+      };
+
+      await _client.from('personal').insert(data);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Personal registrado')));
+      for (final controller in _allControllers) {
+        controller.clear();
+      }
+      _formKey.currentState!.reset();
+      _applyDefaults();
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo registrar: ${e.message}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Registro de personal'),
+      ),
+      drawer: const _AppDrawer(current: _AppMenuOption.personal),
+      body: SafeArea(
+        child: AbsorbPointer(
+          absorbing: _saving,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTextField(
+                    controller: _idPersonal,
+                    label: 'ID personal',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _tipoDocumento,
+                    label: 'Tipo de documento',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _nacionalidad,
+                    label: 'Nacionalidad',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _apellidoPaterno,
+                    label: 'Apellido paterno',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _apellidoMaterno,
+                    label: 'Apellido materno',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _nombres,
+                    label: 'Nombres',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _fkDistrito,
+                    label: 'Distrito (código)',
+                    requiredField: true,
+                    maxLength: 6,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _usuarioRegistro,
+                    label: 'Usuario de registro',
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Registrar personal'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
